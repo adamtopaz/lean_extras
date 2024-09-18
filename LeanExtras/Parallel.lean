@@ -3,11 +3,10 @@ import Lean
 open Lean
 
 def Array.runInParallel 
-    [Monad M] [MonadLift IO M]
     (as : Array α) 
     (numThread : Nat) 
     (e : α → IO (Except IO.Error Unit)) : 
-    M (Except IO.Error Unit) := do
+    IO (Except IO.Error Unit) := do
   let mut tasks := #[]
   for thread in [:numThread] do
     let task ← IO.asTask <| mkTask thread numThread as e
@@ -27,12 +26,11 @@ where mkTask thread numThread as e : IO Unit := do
     | .ok _ => continue
 
 def Array.mapInParallel 
-    [Monad M] [MonadLift IO M]
     [Inhabited β]
     (as : Array α) 
     (numThread : Nat) 
     (e : α → IO (Except IO.Error β)) : 
-    M (Except IO.Error (Array β)) := do
+    IO (Except IO.Error (Array β)) := do
   let mut tasks := #[]
   for thread in [:numThread] do
     let task ← IO.asTask <| mkTask thread numThread as e
