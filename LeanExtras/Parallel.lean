@@ -3,10 +3,11 @@ import Lean
 open Lean
 
 def Array.runInParallel 
+    [Monad M] [MonadLift IO M]
     (as : Array α) 
     (numThread : Nat) 
     (e : α → IO (Except IO.Error Unit)) : 
-    IO (Except IO.Error Unit) := do
+    M (Except IO.Error Unit) := do
   let mut tasks := #[]
   for thread in [:numThread] do
     let task ← IO.asTask <| mkTask thread numThread as e
@@ -14,7 +15,7 @@ def Array.runInParallel
   for t in tasks do
     let t ← IO.wait t
     match t with 
-    | .error e => throw e
+    | .error e => show IO _ from throw e
     | .ok _ => continue
   return .ok ()
 where mkTask thread numThread as e : IO Unit := do
@@ -26,11 +27,12 @@ where mkTask thread numThread as e : IO Unit := do
     | .ok _ => continue
 
 def Array.mapInParallel 
+    [Monad M] [MonadLift IO M]
     [Inhabited β]
     (as : Array α) 
     (numThread : Nat) 
     (e : α → IO (Except IO.Error β)) : 
-    IO (Except IO.Error (Array β)) := do
+    M (Except IO.Error (Array β)) := do
   let mut tasks := #[]
   for thread in [:numThread] do
     let task ← IO.asTask <| mkTask thread numThread as e
@@ -39,7 +41,7 @@ def Array.mapInParallel
   for t in tasks do
     let t ← IO.wait t
     match t with 
-    | .error e => throw e
+    | .error e => show IO _ from throw e
     | .ok bs => fromTasks := fromTasks.push bs
   let mut out : Array β := Array.mkArray as.size default
   for bs in fromTasks do
@@ -56,4 +58,3 @@ where mkTask thread numThread as e : IO (Array (Nat × β)) := do
     | .ok b => 
       out := out.push (i,b)
   return out
-
