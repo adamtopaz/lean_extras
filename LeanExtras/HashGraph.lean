@@ -53,6 +53,9 @@ def union (A B : HashGraph ν ε) : HashGraph ν ε where
   source := B.source.fold .insert A.source
   target := B.target.fold .insert A.target
 
+instance : Union (HashGraph ν ε) where
+  union A B := A.union B
+
 open Lean in
 def mkJson (node : ν → Json) (edge : ε → Json) : Json := Id.run do 
   let nodes := G.node.toArray
