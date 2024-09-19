@@ -132,4 +132,54 @@ def mkDotWithIdx
     out := out ++ s!"  {nodeId source} -> {nodeId target} [label=\"{edgeLabel edge}\"]" ++ "\n"
   return out ++ "}"
 
+def componentTo 
+    {ν ε : Type u} 
+    [Hashable ν] [BEq ν] [DecidableEq ν] 
+    [Hashable ε] [BEq ε] 
+    (G : HashGraph ν ε) (idx : ν) : 
+    (HashGraph ν ε) := Id.run do 
+  assert! G.node.contains idx
+  let mut outGraph : HashGraph ν ε := {idx}
+  let mut queue : Array ν := #[idx]
+  let mut edgesToVisit := G.edge
+  while h : queue.size ≠ 0 do
+    let current := queue[queue.size-1]
+    queue := queue.pop
+    let mut edgesToRemove : HashSet ε := {}
+    for edge in edgesToVisit do
+      let some tgt := G.target.get? edge | continue
+      unless tgt = current do continue
+      let some src := G.source.get? edge | continue
+      outGraph := outGraph.insertEdge edge src tgt
+      queue := queue.push src
+      edgesToRemove := edgesToRemove.insert edge
+    for edge in edgesToRemove do
+      edgesToVisit := edgesToVisit.erase edge
+  return outGraph
+
+def componentFrom 
+    {ν ε : Type u} 
+    [Hashable ν] [BEq ν] [DecidableEq ν] 
+    [Hashable ε] [BEq ε] 
+    (G : HashGraph ν ε) (idx : ν) : 
+    (HashGraph ν ε) := Id.run do 
+  assert! G.node.contains idx
+  let mut outGraph : HashGraph ν ε := {idx}
+  let mut queue : Array ν := #[idx]
+  let mut edgesToVisit := G.edge
+  while h : queue.size ≠ 0 do
+    let current := queue[queue.size-1]
+    queue := queue.pop
+    let mut edgesToRemove : HashSet ε := {}
+    for edge in edgesToVisit do
+      let some src := G.source.get? edge | continue
+      unless src = current do continue
+      let some tgt := G.target.get? edge | continue
+      outGraph := outGraph.insertEdge edge src tgt
+      queue := queue.push tgt
+      edgesToRemove := edgesToRemove.insert edge
+    for edge in edgesToRemove do
+      edgesToVisit := edgesToVisit.erase edge
+  return outGraph
+
 end HashGraph
