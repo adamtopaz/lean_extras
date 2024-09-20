@@ -5,7 +5,8 @@ open Lean
 def Array.runInParallel 
     (as : Array α) 
     (numThread : Nat) 
-    (e : α → IO (Except IO.Error Unit)) : 
+    (e : α → IO (Except IO.Error Unit)) 
+    (progress? : Bool := False) : 
     IO (Except IO.Error Unit) := do
   let mut tasks := #[]
   for thread in [:numThread] do
@@ -19,6 +20,7 @@ def Array.runInParallel
   return .ok ()
 where mkTask thread numThread as e : IO Unit := do
   for h : i in [thread:as.size:numThread] do
+    if progress? then println! s!"Thread {thread} prgress : {(i - thread) / numThread} / {as.size / numThread}"
     let a := as[i]'h.right
     let res ← e a
     match res with 
