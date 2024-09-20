@@ -6,7 +6,7 @@ def Array.runInParallel
     (as : Array α) 
     (numThread : Nat) 
     (e : α → IO (Except IO.Error Unit)) 
-    (progress? : Bool := False) : 
+    (progress? : Bool := false) : 
     IO (Except IO.Error Unit) := do
   let mut tasks := #[]
   for thread in [:numThread] do
