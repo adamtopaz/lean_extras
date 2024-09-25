@@ -103,6 +103,30 @@ def mkJsonWithIdx (idx : ν) (node : ν → Json) (edge : ε → Json) : Json :=
     ("idx", toJson <| nodesMap.get? idx)
   ]
 
+open Lean in
+def mkJsonWithIdxs (idxs : List ν) (node : ν → Json) (edge : ε → Json) : Json := Id.run do 
+  let nodes := G.node.toArray
+  let edges := G.edge.toArray
+  let mut nodesMap : Std.HashMap ν Nat := .ofList nodes.zipWithIndex.toList
+  let mut edgesMap : Std.HashMap ε Nat := .ofList edges.zipWithIndex.toList
+  let sources := G.source.toArray.filterMap fun (e,v) => do
+    let edgeIdx ← edgesMap.get? e
+    let nodeIdx ← nodesMap.get? v
+    return (edgeIdx, nodeIdx)
+  let targets := G.target.toArray.filterMap fun (e,v) => do
+    let edgeIdx ← edgesMap.get? e
+    let nodeIdx ← nodesMap.get? v
+    return (edgeIdx, nodeIdx)
+  return .mkObj [
+    ("node", toJson <| nodes.map node),
+    ("edge", toJson <| edges.map edge),
+    ("source", toJson <| sources),
+    ("target", toJson <| targets),
+    ("num_node", nodes.size),
+    ("num_edge", edges.size),
+    ("idxs", toJson <| idxs.map nodesMap.get?)
+  ]
+
 def mkDot
     (nodeLabel : ν → String)
     (edgeLabel : ε → String) 
@@ -126,6 +150,21 @@ def mkDotWithIdx
   let mut out := "digraph {" ++ "\n"
   for node in G.node do
     out := out ++ s!"  {nodeId node} [label=\"{nodeLabel node}\", color={if idx == node then "red" else "black"}];" ++ "\n"
+  for edge in G.edge do
+    let some source := G.source.get? edge | continue
+    let some target := G.target.get? edge | continue
+    out := out ++ s!"  {nodeId source} -> {nodeId target} [label=\"{edgeLabel edge}\"]" ++ "\n"
+  return out ++ "}"
+
+def mkDotWithIdxs
+    (idxs : List ν)
+    (nodeLabel : ν → String)
+    (edgeLabel : ε → String) 
+    (nodeId : ν → UInt64) :
+    String := Id.run do
+  let mut out := "digraph {" ++ "\n"
+  for node in G.node do
+    out := out ++ s!"  {nodeId node} [label=\"{nodeLabel node}\", color={if idxs.contains node then "red" else "black"}];" ++ "\n"
   for edge in G.edge do
     let some source := G.source.get? edge | continue
     let some target := G.target.get? edge | continue
