@@ -8,6 +8,7 @@ def withTimeout (timeout : Nat) (x : IO α) : IO α := do
   while True do
     let currentTime ← IO.monoMsNow
     if currentTime - start > timeout then
+      IO.cancel task
       throw <| IO.userError "timeout"
     if (← IO.hasFinished task) then
       match task.get with
