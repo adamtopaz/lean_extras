@@ -2,6 +2,13 @@ import Lean
 
 open Lean
 
+/--
+Run a computation in parallel on an array of elements.
+Variables:
+- `as` : the array of elements to run the computation on.
+- `numThread` : the number of threads to use.
+- `e` : the computation to run on each element. It takes the index of the element and the element itself as arguments.
+-/
 def Array.runInParallel 
     (as : Array α) 
     (numThread : Nat) 
@@ -25,6 +32,13 @@ where mkTask thread numThread as e : IO Unit := do
     | .error e => throw e
     | .ok _ => continue
 
+/--
+Map an array of elements to an array of elements in parallel.
+Variables:
+- `as` : the array of elements to map.
+- `numThread` : the number of threads to use.
+- `e` : the mapping function. It takes an element as an argument and returns the mapped element.
+-/
 def Array.mapInParallel 
     [Inhabited β]
     (as : Array α) 
