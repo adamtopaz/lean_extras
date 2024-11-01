@@ -103,3 +103,34 @@ Get the info trees from a module.
 -/
 def Lean.Name.getInfoTrees (mod : Name) : IO (PersistentArray InfoTree) := 
   LeanFile.findModule mod >>= fun e => e.getInfoTrees
+
+/--
+A convenience function to run a computation on the infotrees in a module.
+-/
+def Lean.Name.withInfoTrees (mod : Name) (m : PersistentArray InfoTree → IO α) : IO α := do
+  let trees ← mod.getInfoTrees
+  m trees
+
+/--
+Visit all nodes in all infotrees in a module.
+-/
+def Lean.Name.withVisitInfoTrees 
+    (mod : Name) 
+    (pre : ContextInfo → Info → PersistentArray InfoTree → IO Unit) 
+    (post : ContextInfo → Info → PersistentArray InfoTree → List (Option α) → IO α) : IO (Array (Option α)) :=
+  mod.withInfoTrees fun trees => do
+    let mut out := #[]
+    for tree in trees do
+      out := out.push <| ← tree.visitM pre post
+    return out
+
+/--
+Visit all nodes in all infotrees in a module.
+This is a version of `Lean.Name.withVisitInfoTrees` that does not return any values.
+-/
+def Lean.Name.withInfoTrees' (mod : Name) 
+    (pre : ContextInfo → Info → PersistentArray InfoTree → IO Unit) 
+    (post : ContextInfo → Info → PersistentArray InfoTree → IO Unit) : IO Unit := do
+  mod.withInfoTrees fun trees => do
+    for tree in trees do
+      tree.visitM' pre post
