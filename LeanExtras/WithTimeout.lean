@@ -3,19 +3,21 @@ import Lean
 open Lean
 
 /--
+Return type used internally by `withTimeout`. 
+-/
+inductive TimeoutResult (α : Type) where
+  | success (val : α)
+  | timeout
+
+/--
 Run a computation with a timeout.
 -/
-def withTimeout (timeout : Nat) (x : IO α) : IO α := do
-  let start ← IO.monoMsNow
-  let task ← IO.asTask x
-  while True do
-    let currentTime ← IO.monoMsNow
-    if currentTime - start > timeout then
-      IO.cancel task
-      throw <| IO.userError "timeout"
-    if (← IO.hasFinished task) then
-      match task.get with
-      | .ok res => return res
-      | .error e => throw e
-  throw <| .userError "timeout"
-
+def withTimeout (timeout : UInt32) (x : IO α) : IO α := do
+  let timeoutTask ← IO.asTask (prio := .dedicated) <| 
+    IO.sleep timeout >>= fun _ => return TimeoutResult.timeout
+  let mainTask ← IO.asTask (prio := .dedicated) <| TimeoutResult.success <$> x
+  let res ← IO.waitAny [mainTask, timeoutTask]
+  match res with 
+  | .ok <| .success a => return a
+  | .ok <| .timeout => throw <| .userError s!"Operation timed out after {timeout}ms"
+  | .error e => throw e
