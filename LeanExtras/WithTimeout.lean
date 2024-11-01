@@ -16,8 +16,7 @@ def withTimeout (timeout : UInt32) (x : IO α) : IO α := do
   let timeoutTask ← IO.asTask (prio := .dedicated) <| 
     IO.sleep timeout >>= fun _ => return TimeoutResult.timeout
   let mainTask ← IO.asTask (prio := .dedicated) <| TimeoutResult.success <$> x
-  let res ← IO.waitAny [mainTask, timeoutTask]
-  match res with 
+  match ← IO.waitAny [mainTask, timeoutTask] with
   | .ok <| .success a => return a
   | .ok <| .timeout => throw <| .userError s!"Operation timed out after {timeout}ms"
   | .error e => throw e
