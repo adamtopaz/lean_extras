@@ -87,8 +87,8 @@ The resulting object has the following fields:
 def mkJson (node : ν → Json) (edge : ε → Json) : Json := Id.run do 
   let nodes := G.node.toArray
   let edges := G.edge.toArray
-  let mut nodesMap : Std.HashMap ν Nat := .ofList nodes.zipWithIndex.toList
-  let mut edgesMap : Std.HashMap ε Nat := .ofList edges.zipWithIndex.toList
+  let mut nodesMap : Std.HashMap ν Nat := .ofList nodes.zipIdx.toList
+  let mut edgesMap : Std.HashMap ε Nat := .ofList edges.zipIdx.toList
   let sources := G.source.toArray.filterMap fun (e,v) => do
     let edgeIdx ← edgesMap.get? e
     let nodeIdx ← nodesMap.get? v
@@ -114,8 +114,8 @@ Similar to `HashGraph.mkJson`, but provides an additional field `idx` that conta
 def mkJsonWithIdx (idx : ν) (node : ν → Json) (edge : ε → Json) : Json := Id.run do 
   let nodes := G.node.toArray
   let edges := G.edge.toArray
-  let mut nodesMap : Std.HashMap ν Nat := .ofList nodes.zipWithIndex.toList
-  let mut edgesMap : Std.HashMap ε Nat := .ofList edges.zipWithIndex.toList
+  let mut nodesMap : Std.HashMap ν Nat := .ofList nodes.zipIdx.toList
+  let mut edgesMap : Std.HashMap ε Nat := .ofList edges.zipIdx.toList
   let sources := G.source.toArray.filterMap fun (e,v) => do
     let edgeIdx ← edgesMap.get? e
     let nodeIdx ← nodesMap.get? v
@@ -142,8 +142,8 @@ Similar to `HashGraph.mkJson`, but provides an additional field `idxs` that cont
 def mkJsonWithIdxs (idxs : List ν) (node : ν → Json) (edge : ε → Json) : Json := Id.run do 
   let nodes := G.node.toArray
   let edges := G.edge.toArray
-  let mut nodesMap : Std.HashMap ν Nat := .ofList nodes.zipWithIndex.toList
-  let mut edgesMap : Std.HashMap ε Nat := .ofList edges.zipWithIndex.toList
+  let mut nodesMap : Std.HashMap ν Nat := .ofList nodes.zipIdx.toList
+  let mut edgesMap : Std.HashMap ε Nat := .ofList edges.zipIdx.toList
   let sources := G.source.toArray.filterMap fun (e,v) => do
     let edgeIdx ← edgesMap.get? e
     let nodeIdx ← nodesMap.get? v

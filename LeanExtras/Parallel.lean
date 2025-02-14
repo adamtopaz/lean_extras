@@ -6,7 +6,7 @@ open Lean
 Run a computation in parallel on an array of elements.
 Variables:
 - `as` : the array of elements to run the computation on.
-- `numThread` : the number of threads to use.
+- `numThread` : one less than the number of threads to use.
 - `e` : the computation to run on each element. It takes the index of the element and the element itself as arguments.
 -/
 def Array.runInParallel 
@@ -25,8 +25,8 @@ def Array.runInParallel
     | .ok _ => continue
   return .ok ()
 where mkTask thread numThread as e : IO Unit := do
-  for h : i in [thread:as.size:numThread] do
-    let a := as[i]'h.right
+  for h : i in Std.Range.mk thread as.size (numThread + 1) (Nat.zero_lt_succ numThread) do
+    let a := as[i]'h.right.left
     let res ← e i a
     match res with 
     | .error e => throw e
@@ -36,7 +36,7 @@ where mkTask thread numThread as e : IO Unit := do
 Map an array of elements to an array of elements in parallel.
 Variables:
 - `as` : the array of elements to map.
-- `numThread` : the number of threads to use.
+- `numThread` : one less than the number of threads to use.
 - `e` : the mapping function. It takes an element as an argument and returns the mapped element.
 -/
 def Array.mapInParallel 
@@ -62,8 +62,8 @@ def Array.mapInParallel
   return .ok out
 where mkTask thread numThread as e : IO (Array (Nat × β)) := do
   let mut out := #[]
-  for h : i in [thread:as.size:numThread] do
-    let a := as[i]'h.right
+  for h : i in Std.Range.mk thread as.size (numThread + 1) (Nat.zero_lt_succ numThread) do
+    let a := as[i]'h.right.left
     let res ← e a
     match res with 
     | .error e => throw e

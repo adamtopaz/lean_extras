@@ -116,7 +116,7 @@ Visit all nodes in all infotrees in a module.
 -/
 def LeanFile.withVisitInfoTrees 
     (mod : LeanFile) 
-    (pre : ContextInfo → Info → PersistentArray InfoTree → IO Unit) 
+    (pre : ContextInfo → Info → PersistentArray InfoTree → IO Bool) 
     (post : ContextInfo → Info → PersistentArray InfoTree → List (Option α) → IO α) : IO (Array (Option α)) :=
   mod.withInfoTrees fun trees => do
     let mut out := #[]
@@ -129,7 +129,7 @@ Visit all nodes in all infotrees in a module.
 This is a version of `Lean.Name.withVisitInfoTrees` that does not return any values.
 -/
 def LeanFile.withVisitInfoTrees' (mod : LeanFile) 
-    (pre : ContextInfo → Info → PersistentArray InfoTree → IO Unit) 
+    (pre : ContextInfo → Info → PersistentArray InfoTree → IO Bool) 
     (post : ContextInfo → Info → PersistentArray InfoTree → IO Unit) : IO Unit := do
   mod.withInfoTrees fun trees => do
     for tree in trees do
